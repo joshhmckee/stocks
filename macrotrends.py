@@ -3,7 +3,6 @@ import pandas as pd
 import utils.format as format
 import plotly.express as px
 import streamlit as st
-import lxml
 
 class MacroTrendsAPI:
     """
@@ -28,7 +27,8 @@ class MacroTrendsAPI:
         # read table from html into pandas dataframe
         try:
             request = requests.get(url)
-            table_revenue = pd.read_html(request.text, match='Quarterly Revenue', parse_dates=True)[0]
+            return
+            # table_revenue = pd.read_html(url, match='Quarterly Revenue', parse_dates=True)[0]
         except Exception as e:
             st.write(e)
             return []
