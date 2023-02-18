@@ -2,6 +2,7 @@ import requests
 import pandas as pd
 import utils.format as format
 import streamlit as st
+import bs4
 
 class MacroTrendsAPI:
     """
