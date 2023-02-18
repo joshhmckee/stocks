@@ -3,7 +3,6 @@ import pandas as pd
 import utils.format as format
 import plotly.express as px
 import streamlit as st
-import lxml
 
 class MacroTrendsAPI:
     """
