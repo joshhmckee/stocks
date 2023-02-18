@@ -7,10 +7,16 @@ import datetime as dt
 # initialize api used to get data
 mt = MacroTrendsAPI()
 
-ticker = st.text_input('.', placeholder='🔍  Search for a ticker', label_visibility='collapsed')
+if 'input' not in st.session_state:
+    st.session_state.ticker = 'AAPL'
 
-if not ticker:
-    ticker = 'AAPL'
+def submit():
+    st.session_state.ticker = st.session_state.input
+    st.session_state.input = ''
+
+ticker = st.text_input('.', key='input', placeholder='🔍  Search for a ticker', label_visibility='collapsed', on_change=submit)
+
+ticker = st.session_state.ticker
 
 # collect data for ticker
 revenue = mt.get_quarterly_revenue(ticker)
