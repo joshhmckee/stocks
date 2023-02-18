@@ -27,7 +27,9 @@ class MacroTrendsAPI:
         # read table from html into pandas dataframe
         try:
             table_revenue = pd.read_html(url, match='Quarterly Revenue', parse_dates=True)[0]
-        except Exception as e:
+            st.write(table_revenue)
+            return []
+        except:
             st.write("Failed")
             return []
 
