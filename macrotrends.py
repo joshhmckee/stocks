@@ -2,7 +2,6 @@ import requests
 import pandas as pd
 import utils.format as format
 import streamlit as st
-from bs4 import BeautifulSoup
 
 class MacroTrendsAPI:
     """
@@ -27,10 +26,7 @@ class MacroTrendsAPI:
         # read table from html into pandas dataframe
         try:
             table_revenue = pd.read_html(url, match='Quarterly Revenue', parse_dates=True)[0]
-            st.write(table_revenue)
-            return []
         except:
-            st.write("Failed")
             return []
 
         # formatting the dataframe
