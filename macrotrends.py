@@ -31,6 +31,7 @@ class MacroTrendsAPI:
 
         # formatting the dataframe
         table_revenue.columns = ['date', 'revenue']
+        table_revenue['date'] =  pd.to_datetime(table_revenue['date'], format='%Y-%m-%d')
         table_revenue.set_index('date', inplace=True)
         table_revenue = format.columns_price_to_float(table_revenue, ['revenue'])
         table_revenue.sort_index(inplace=True)
@@ -59,6 +60,7 @@ class MacroTrendsAPI:
 
         # formatting the dataframe
         table_eps.columns = ['date', 'eps']
+        table_eps['date'] =  pd.to_datetime(table_eps['date'], format='%Y-%m-%d')
         table_eps.set_index('date', inplace=True)
         table_eps = format.columns_price_to_float(table_eps, ['eps'])
         table_eps.sort_index(inplace=True)
