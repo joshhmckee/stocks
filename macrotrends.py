@@ -1,8 +1,6 @@
 import requests
 import pandas as pd
 import utils.format as format
-import plotly.express as px
-import streamlit as st
 
 class MacroTrendsAPI:
     """
@@ -26,11 +24,8 @@ class MacroTrendsAPI:
         
         # read table from html into pandas dataframe
         try:
-            request = requests.get(url)
-            return [[1,12],[2,124]]
-            # table_revenue = pd.read_html(url, match='Quarterly Revenue', parse_dates=True)[0]
-        except Exception as e:
-            st.write(e)
+            table_revenue = pd.read_html(url, match='Quarterly Revenue', parse_dates=True)[0]
+        except:
             return []
 
         # formatting the dataframe
