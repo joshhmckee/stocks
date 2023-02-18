@@ -19,7 +19,8 @@ class MacroTrendsAPI:
         function checks if ticker is a valid stock ticker.
 
         example: check_ticker('TSLA')
-        :param: a stock ticker
+
+        :param ticker: a stock ticker
         :return: true or false depending on if the ticker is valid
         """
         # request website html
@@ -27,6 +28,32 @@ class MacroTrendsAPI:
         html = self.session.get(url).text
         # check for 404 error in html
         return 'Error Code: 404' in html
+    
+    def get_metadata(self, ticker: str) -> dict:
+        """
+        function gets sector, industry, market cap, and description for ticker.
+
+        example: get_metadata('TSLA')
+
+        :param ticker: a stock ticker
+        :return: a `dict` with data about the stock
+        """
+        metadata = {'Sector': '', 'Industry': '', 'Market Cap': '', 'Description': ''}
+        try:
+            # request website html
+            url = f"https://www.macrotrends.net/stocks/charts/{ticker.upper()}/stock/stock-price-history"
+            html = self.session.get(url).text
+            table = pd.read_html(html, match='Sector')[0]
+
+            # parse table and get data we want
+            metadata['Sector'] = table['Sector'][0]
+            metadata['Industry'] = table['Industry'][0]
+            metadata['Market Cap'] = table['Market Cap'][0]
+            metadata['Description'] = table['Sector'][1]
+        except:
+            st.error('An Error Occurred')
+
+        return metadata
     
     def get_revenue(self, ticker: str) -> dict:
         """
@@ -55,7 +82,7 @@ class MacroTrendsAPI:
 
         return revenue_data
     
-    def get_eps(self, ticker: str) -> pd.DataFrame:
+    def get_eps(self, ticker: str) -> dict:
         """
         function used to get FQ, FY, LTM eps data for ticker.
 
@@ -64,23 +91,23 @@ class MacroTrendsAPI:
         :param ticker: a valid stock ticker
         :return: a `dict` with period as keys and eps `DataFrame` as values
         """
+        eps_data = {'Quarterly (FQ)': [], 'Annual (FY)': [], 'Last 12 Months (LTM)': []}
+        try:
+            # request website html
+            url = f"https://www.macrotrends.net/stocks/charts/{ticker.upper()}/stock/eps-earnings-per-share-diluted"
+            html = self.session.get(url).text
 
-        # request website html
-        url = f"https://www.macrotrends.net/stocks/charts/{ticker.upper()}/stock/eps-earnings-per-share-diluted"
-        html = self.session.get(url).text
+            quarter_table = pd.read_html(html, match='Quarterly EPS', parse_dates=True)[0]
+            eps_data['Quarterly (FQ)'] = format.format_financial_table(quarter_table, 'eps', '%Y-%m-%d')
 
-        eps_data = {}
+            year_table = pd.read_html(html, match='Annual EPS', parse_dates=True)[0]
+            eps_data['Annual (FY)'] = format.format_financial_table(year_table, 'eps', '%Y')
 
-        quarter_table = pd.read_html(html, match='Quarterly EPS', parse_dates=True)[0]
-        eps_data['Quarterly (FQ)'] = format.format_financial_table(quarter_table, 'eps', '%Y-%m-%d')
-
-        year_table = pd.read_html(html, match='Annual EPS', parse_dates=True)[0]
-        eps_data['Annual (FY)'] = format.format_financial_table(year_table, 'eps', '%Y')
-
-        eps_data['Last 12 Months (LTM)'] = eps_data['Quarterly (FQ)'].rolling(4).sum()
+            eps_data['Last 12 Months (LTM)'] = eps_data['Quarterly (FQ)'].rolling(4).sum()
+        except:
+            st.error('An Error Occurred')
 
         return eps_data
-
     
     def get_quarterly_shares_outstanding(self, ticker: str) -> pd.DataFrame:
         """
@@ -112,7 +139,4 @@ if __name__ == "__main__":
     #     fig = px.bar(revenue) # make sure the labels work
     #     fig.update_layout(showlegend=False)
     #     fig.show()
-    url = f"https://www.macrotrends.net/stocks/charts/TSLA/stock/revenue"
-    request = requests.get(url)
-    df = pd.read_html(request.text, parse_dates=True)
-    print(df)
+    mt.get_metadata('TSLA')
