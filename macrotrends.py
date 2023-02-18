@@ -27,8 +27,7 @@ class MacroTrendsAPI:
         try:
             table_revenue = pd.read_html(url, match='Quarterly Revenue', parse_dates=True)[0]
         except:
-            return [[1,10], [2,20]]
-
+            return []
 
         # formatting the dataframe
         table_revenue.columns = ['date', 'revenue']

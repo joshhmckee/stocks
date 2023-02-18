@@ -33,7 +33,7 @@ col1, col2, col3 = st.columns(3)
 with col1:
     if revenue_check:
         data = mt.get_quarterly_revenue(ticker)
-        st.bar_chart(data)
+        st.write(ticker)
 with col2:
     if eps_check:
         data = mt.get_quarterly_eps(ticker)
