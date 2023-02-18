@@ -1,7 +1,9 @@
+from xmlrpc.client import boolean
 import requests
 import pandas as pd
 import utils.format as format
 import streamlit as st
+import time
 
 class MacroTrendsAPI:
     """
@@ -12,60 +14,73 @@ class MacroTrendsAPI:
         # requests session used to get website data
         self.session = requests.Session()
     
-    def get_quarterly_revenue(self, ticker: str) -> pd.DataFrame:
+    def check_ticker(self, ticker: str) -> bool:
         """
-        function used to get quarterly revenue data for ticker.
+        function checks if ticker is a valid stock ticker.
 
-        example: get_quarterly_revenue('TSLA')
-
-        :param ticker: a valid stock ticker
-        :return: a `DataFrame` with columns [date, revenue]
+        example: check_ticker('TSLA')
+        :param: a stock ticker
+        :return: true or false depending on if the ticker is valid
         """
-        url = f"https://www.macrotrends.net/stocks/charts/{ticker.upper()}/stock/revenue"
-        
-        # read table from html into pandas dataframe
-        try:
-            table_revenue = pd.read_html(url, match='Quarterly Revenue', parse_dates=True)[0]
-        except:
-            return []
-
-        # formatting the dataframe
-        table_revenue.columns = ['date', 'revenue']
-        table_revenue['date'] =  pd.to_datetime(table_revenue['date'], format='%Y-%m-%d')
-        table_revenue.set_index('date', inplace=True)
-        table_revenue = format.columns_price_to_float(table_revenue, ['revenue'])
-        table_revenue.sort_index(inplace=True)
-
-        # multiply since table revenue is in millions
-        table_revenue['revenue'] *= 1e6
-
-        return table_revenue
+        # request website html
+        url = f"https://www.macrotrends.net/stocks/charts/{ticker.upper()}/stock/stock-price-history"
+        html = self.session.get(url).text
+        # check for 404 error in html
+        return 'Error Code: 404' in html
     
-    def get_quarterly_eps(self, ticker: str) -> pd.DataFrame:
+    def get_revenue(self, ticker: str) -> dict:
         """
-        function used to get quarterly eps data for ticker.
+        function used to get FQ, FY, LTM revenue data for ticker.
 
-        example: get_quarterly_eps('TSLA')
+        example: get_revenue('TSLA')
 
         :param ticker: a valid stock ticker
-        :return: a `DataFrame` with columns [date, eps]
+        :return: a `dict` with period as keys and revenue `DataFrame` as values
         """
-        url = f"https://www.macrotrends.net/stocks/charts/{ticker.upper()}/stock/eps-earnings-per-share-diluted"
-        
-        # read table from html into pandas dataframe
+        revenue_data = {'Quarterly (FQ)': [], 'Annual (FY)': [], 'Last 12 Months (LTM)': []}
         try:
-            table_eps = pd.read_html(url, match='Quarterly EPS', parse_dates=True)[0]
+            # request website html
+            url = f"https://www.macrotrends.net/stocks/charts/{ticker.upper()}/stock/revenue"
+            html = self.session.get(url).text
+
+            quarter_table = pd.read_html(html, match='Quarterly Revenue', parse_dates=True)[0]
+            revenue_data['Quarterly (FQ)'] = format.format_financial_table(quarter_table, 'revenue', '%Y-%m-%d')
+
+            year_table = pd.read_html(html, match='Annual Revenue', parse_dates=True)[0]
+            revenue_data['Annual (FY)'] = format.format_financial_table(year_table, 'revenue', '%Y')
+
+            revenue_data['Last 12 Months (LTM)'] = revenue_data['Quarterly (FQ)'].rolling(4).sum()
         except:
-            return []
+            st.error('An Error Occurred')
 
-        # formatting the dataframe
-        table_eps.columns = ['date', 'eps']
-        table_eps['date'] =  pd.to_datetime(table_eps['date'], format='%Y-%m-%d')
-        table_eps.set_index('date', inplace=True)
-        table_eps = format.columns_price_to_float(table_eps, ['eps'])
-        table_eps.sort_index(inplace=True)
+        return revenue_data
+    
+    def get_eps(self, ticker: str) -> pd.DataFrame:
+        """
+        function used to get FQ, FY, LTM eps data for ticker.
 
-        return table_eps
+        example: get_eps('TSLA')
+
+        :param ticker: a valid stock ticker
+        :return: a `dict` with period as keys and eps `DataFrame` as values
+        """
+
+        # request website html
+        url = f"https://www.macrotrends.net/stocks/charts/{ticker.upper()}/stock/eps-earnings-per-share-diluted"
+        html = self.session.get(url).text
+
+        eps_data = {}
+
+        quarter_table = pd.read_html(html, match='Quarterly EPS', parse_dates=True)[0]
+        eps_data['Quarterly (FQ)'] = format.format_financial_table(quarter_table, 'eps', '%Y-%m-%d')
+
+        year_table = pd.read_html(html, match='Annual EPS', parse_dates=True)[0]
+        eps_data['Annual (FY)'] = format.format_financial_table(year_table, 'eps', '%Y')
+
+        eps_data['Last 12 Months (LTM)'] = eps_data['Quarterly (FQ)'].rolling(4).sum()
+
+        return eps_data
+
     
     def get_quarterly_shares_outstanding(self, ticker: str) -> pd.DataFrame:
         """
@@ -97,3 +112,7 @@ if __name__ == "__main__":
     #     fig = px.bar(revenue) # make sure the labels work
     #     fig.update_layout(showlegend=False)
     #     fig.show()
+    url = f"https://www.macrotrends.net/stocks/charts/TSLA/stock/revenue"
+    request = requests.get(url)
+    df = pd.read_html(request.text, parse_dates=True)
+    print(df)
