@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from macrotrends import MacroTrendsAPI
+from macro_trends import MacroTrendsAPI
 import time
 from streamlit import session_state as state
 
@@ -33,7 +33,23 @@ st.text_input('.', key='input', placeholder='🔍  Search for a ticker', label_v
 with st.sidebar:
     st.header(f'{state.metadata["Industry"]} Top Stocks')
     with st.container():
-        st.write('Coming Soon')
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.subheader('Stock')
+            values = state.metadata['Competitors']['Stock Name'].values
+            for value in values:
+                value = value.split(' ')[-1][1:-1]
+                st.write(value, on_click=submit)
+        with col2:
+            st.subheader('Market Cap')
+            values = state.metadata['Competitors']['Market Cap'].values
+            for value in values:
+                st.markdown(value)
+        with col3:
+            st.subheader('PE Ratio')
+            values = state.metadata['Competitors']['PE Ratio'].values
+            for value in values:
+                st.markdown(value)
 
 st.header(f"{state.ticker.upper()} Dashboard")
 

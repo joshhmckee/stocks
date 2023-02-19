@@ -50,6 +50,9 @@ class MacroTrendsAPI:
             metadata['Industry'] = table['Industry'][0]
             metadata['Market Cap'] = table['Market Cap'][0]
             metadata['Description'] = table['Sector'][1]
+
+            # get competitors from same page
+            metadata['Competitors'] = pd.read_html(html, match='Stock Name')[0][['Stock Name', 'Market Cap', 'PE Ratio']]
         except:
             st.error('An Error Occurred')
 
@@ -139,4 +142,4 @@ if __name__ == "__main__":
     #     fig = px.bar(revenue) # make sure the labels work
     #     fig.update_layout(showlegend=False)
     #     fig.show()
-    mt.get_metadata('TSLA')
+    print(mt.get_metadata('TSLA'))
